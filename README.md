@@ -50,6 +50,63 @@ The default scale factor is `1`, so values are used as supplied and displayed as
 | Manually add or remove suppression intervals | Save annotations automatically in the background |
 | Save after reviewing the final annotation | Follow progress in a simple batch dialog |
 
+## Understand the interface
+
+The single-recording view is divided into four working areas.
+
+### Top toolbar
+
+| Control | Purpose |
+| --- | --- |
+| **Load single file…** | Opens one recording for visual review and manual correction |
+| **Settings** | Opens the Signal and Algorithms settings beside the plots |
+| **Load and run batch…** | Selects several recordings for unattended processing |
+| Recording name | Shows the currently loaded file; hover over it to see the complete path |
+| Model status | Confirms that the bundled model is ready and shows the processing device |
+
+### EEG panel
+
+The upper plot shows only the currently visible part of the EEG. The blue trace is the EEG signal. Orange sections are included in the final suppression annotation, whether they came from an automatic detector or from a manual addition.
+
+In **Navigation mode**, move the pointer over the EEG to inspect the nearest prediction window. A vertical marker identifies the window, and the readout shows the raw value from every active algorithm. Clicking the upper plot in Navigation mode does not change the annotation.
+
+### Detection overview
+
+The lower plot is the full-recording detection overview, also referred to as the detection subpanel.
+
+- Each active algorithm has its own labeled row. Colored bars show where that algorithm detects suppression.
+- **Combined + manual** shows the union of all active algorithms after manual additions and removals.
+- The shaded vertical band marks the part of the recording currently displayed in the upper EEG panel.
+- Click anywhere in the detection overview to jump to that time. The upper EEG panel is recentered around the clicked position.
+- Clicking the overview only navigates. It never adds or removes an annotation, even when **Select suppression** or **Deselect suppression** is active.
+
+This overview is the quickest way to inspect a distant detection: click its colored bar, then review the corresponding EEG in the upper panel.
+
+### Command bar and status bar
+
+| Control | Purpose |
+| --- | --- |
+| **Previous** | Moves backward by about 90% of the visible EEG window |
+| **Next** | Moves forward by about 90% of the visible EEG window |
+| **Select suppression** | Starts manual addition mode |
+| **Deselect suppression** | Starts manual removal mode |
+| **Navigation mode** | Leaves editing mode and restores hover inspection |
+| **Save annotation** | Writes the current combined annotation beside the source recording |
+| Bottom status bar | Reports loading, prediction, batch, and save progress |
+
+The 90% navigation step leaves approximately 10% of the previous EEG window visible, which helps maintain visual continuity.
+
+### Keyboard and mouse controls
+
+| Input | Action |
+| --- | --- |
+| Left arrow | Same as **Previous** |
+| Right arrow | Same as **Next** |
+| Escape | Returns to Navigation mode and cancels an unfinished boundary selection |
+| Hover over upper EEG | Shows raw detector values in Navigation mode |
+| Click upper EEG | Places an interval boundary when an edit mode is active |
+| Click lower overview | Jumps the upper EEG panel to that time |
+
 ## Review one recording
 
 1. Select **Load single file…** and choose a compatible `.mat` file.
@@ -58,22 +115,26 @@ The default scale factor is `1`, so values are used as supplied and displayed as
 4. Inspect, edit, or navigate through the result.
 5. Select **Save annotation** when the annotation is ready.
 
-Only selected algorithms are calculated and displayed. Their masks are combined with a logical OR to create the automatic annotation.
+Only selected algorithms are displayed and combined. The raw values from the latest prediction are retained for the current recording and scaling factor. Their masks are combined with a logical OR to create the automatic annotation.
 
 ### Navigate and inspect
 
-- Use **Previous**, **Next**, or the left and right arrow keys to move through the EEG.
-- Click the lower overview to center the EEG view at that location.
+- Use **Previous**, **Next**, or the left and right arrow keys to move through the EEG with a small overlap between windows.
+- Click a detection in the lower overview to center the upper EEG panel at that location. The shaded overview band moves with the EEG panel.
 - In **Navigation mode**, hover over the upper EEG plot to see the active algorithms' raw values for the nearest one-second window.
 - The hover readout uses values already calculated during prediction and does not run the algorithms again.
 
 ### Correct the annotation
 
-- Select **Select suppression**, then click two boundaries in the upper EEG plot to add that interval.
-- Select **Deselect suppression**, then click two boundaries to remove that interval.
-- Select **Navigation mode** or press Escape to stop editing.
+1. Select **Select suppression** to add an interval or **Deselect suppression** to remove one.
+2. Click the first boundary in the upper EEG plot. A dashed marker shows the pending boundary.
+3. Click the second boundary. The boundary order does not matter; the application uses the earlier time as the start.
+4. Continue clicking pairs of boundaries to edit more intervals in the same mode.
+5. Select **Navigation mode** or press Escape to stop editing. This also cancels a first boundary that has not yet received its matching second boundary.
 
-Manual additions remain when predictions are run again. Manual deselections are cleared when a new prediction replaces the previous result.
+Use the lower overview to move elsewhere in the recording without leaving the current edit mode. Boundary clicks must always be made in the upper EEG plot.
+
+Manual additions remain when automatic prediction settings change. Manual deselections are cleared when the automatic result changes.
 
 ## Adapt the settings
 
@@ -94,7 +155,7 @@ Changing the display window or Y limits does not alter predictions. Changing the
 | Setting | Effect |
 | --- | --- |
 | Minimum duration | Removes shorter automatic detections; manual edits are unaffected |
-| Use | Selects which algorithms are calculated, displayed, and combined |
+| Use | Selects which algorithms are displayed and combined; prediction runs again only when a selected algorithm is missing from the current result |
 | Threshold | Overrides the calibrated threshold for that algorithm |
 
 The threshold rules are:
@@ -106,7 +167,7 @@ The threshold rules are:
 | Westover | value `<` threshold |
 | OpenIBIS | value `<=` threshold |
 
-Select **Done** to apply algorithm changes. A new prediction starts automatically when processing settings changed. **Restore algorithm defaults** selects all algorithms, restores the one-second minimum duration, and reloads the thresholds from the bundled model.
+Select **Done** to apply algorithm changes. Threshold and minimum-duration changes reuse the raw values from the latest prediction. The application does not retain results for older recordings or scaling factors. **Restore algorithm defaults** selects all algorithms, restores the one-second minimum duration, and reloads the thresholds from the bundled model.
 
 Settings remain unchanged when another recording is loaded during the same application session. Closing the application starts a new session with the defaults.
 
@@ -151,9 +212,6 @@ The packaged application includes Python, the model, and all required libraries.
 
 - **Windows:** extract the complete archive and open `SuppressionDetection.exe`. Keep the `_internal` folder beside the executable.
 - **macOS:** extract the archive and open `SuppressionDetection.app`.
-
-Development builds may trigger Windows SmartScreen or macOS Gatekeeper because they are unsigned.
-
 
 ## Troubleshooting
 
