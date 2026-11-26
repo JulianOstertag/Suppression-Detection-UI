@@ -211,7 +211,7 @@ Existing `Annotation_<recording>.csv` and `Batch_settings.txt` files with the sa
 The packaged application includes Python, the model, and all required libraries.
 
 - **Windows:** extract the complete archive and open `SuppressionDetection.exe`. Keep the `_internal` folder beside the executable.
-- **macOS:** extract the archive and open `SuppressionDetection.app`.
+- **macOS:** Not yet available.
 
 ## Troubleshooting
 
